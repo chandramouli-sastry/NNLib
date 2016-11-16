@@ -4,7 +4,7 @@ from layers.Layer import Layer
 
 
 class SoftmaxLayer(Layer):
-    def __init__(self, layer_size, input_sizes, init_function = np.random.randn, alpha=0.1):
+    def __init__(self, layer_size, input_sizes, init_function = np.random.randn, alpha=0.1,activation=None):
         Layer.__init__(self,layer_size, input_sizes,
                        init_function = np.random.randn,activation=Softmax, alpha=0.1)
 

@@ -9,11 +9,10 @@ class Layer:
         self.alpha = alpha
         self.layer_size = layer_size
         self.input_sizes = input_sizes
-        self.weights = [np.random.uniform(low = -3, high=3,size =(layer_size, input_size)) \
+        self.weights = [np.random.uniform(low = -2, high=2,size =(layer_size, input_size))*0.01 \
                          for input_size in input_sizes]
         self.deltas = [np.zeros((layer_size,input_size)) for input_size in input_sizes]
-        val = np.random.randn(layer_size, 1) / layer_size
-        self.bias =  np.random.uniform(low = 0, high=3,size =(layer_size, 1))
+        self.bias =  np.random.uniform(low = -2, high=2,size =(layer_size, 1))*0.01
         self.del_bias = np.zeros((layer_size,1))
         self.input_stack = []
         self.activation_stack = []
@@ -42,6 +41,7 @@ class Layer:
     def backward(self, error_incoming, apply= True, alpha = 0.01):
         error_incoming = np.array(error_incoming).reshape((self.layer_size,1)) if type(error_incoming)==type([]) else error_incoming
         error_lower = error_incoming * self.activation.differentiate(self.activation_stack.pop())
+        #error_lower = error_lower.clip(-5,5)
         inputs = self.input_stack.pop()
         self.compute_gradients(error_lower, inputs)
         error_outgoing = [weight.T.dot(error_lower) for weight in self.weights]#weight: inp*layer_size layer_size*1
@@ -56,13 +56,13 @@ class Layer:
 
     def apply_gradients(self, alpha = 0.01):
         for index,delta in enumerate(self.deltas):
-            self.weights[index] += alpha * delta
+            self.weights[index] += alpha * delta#.clip(-5,5)
         self.bias += alpha * self.del_bias
         self.deltas = [np.zeros((self.layer_size,input_size)) for input_size in self.input_sizes]
         self.del_bias = np.zeros((self.layer_size,1))
 
 
-def test():
+def test(_type):
     max_max_epochs = 10000
     for h in range(max_max_epochs):
         examples, ann = get_ann(_type)
@@ -74,8 +74,11 @@ def test():
         max = -1
         for example, target in examples:
             forward = ann.forward(example)
+            print max,forward
+            print forward>max
             if (forward > max):
                 max = forward
+
         if (max == 0):
             print("FAIL", h)
             for example, target in examples:
@@ -86,11 +89,19 @@ def test():
             print(h)
 
 if __name__=="__main__":
+    '''x = Layer(2,[1],activation=Linear)
+    for e in range(1000):
+        p = x.forward([[1]],train=True)
+        #print(p)
+        err = np.array([[3],[2]])-p
+        x.backward(err)
+    print x.forward([[1]])
+    input("Satisfied?")'''
     log = False#True
     def get_ann(_type):
         if _type=="Auto":
             examples = [[[0,1],[0,1]],[[0,0],[0,0]],[[1,0],[1,0]],[[1,1],[1,1]]]
-            ann = ANN([(Layer,100,Linear),(Layer,2,Linear)],2)
+            ann = ANN([(Layer,5,Linear),(Layer,2,Linear)],2)
         elif _type=="Bin-To-Decimal":
             examples = [[[0,1],[1]],[[0,0],[0]],[[1,0],[2]],[[1,1],[3]]]
             ann = ANN([(Layer,4,Linear),(Layer,1,Linear)],2)
@@ -103,7 +114,7 @@ if __name__=="__main__":
         return examples,ann
     class ANN:
         def __init__(self,list_sizes,input_size):
-            self.alpha = 1.0
+            self.alpha = 0.01
             prev_size = input_size
             self.layers = []
             for Layer,i,act in list_sizes:
@@ -144,14 +155,15 @@ if __name__=="__main__":
             for layer in self.layers:
                 layer.print_w()
 
-    _type = "Bin-To-Decimal"
-    examples,ann = get_ann("crap")
+    _type = "Auto"
+    test(_type)
+    examples,ann = get_ann("Auto")
     max_epochs = 5000
     for epoch in range(max_epochs):
         for example,target in examples:
             observed = ann.forward(example,train=True)
-            ann.backward(observed,target,epoch,max_epochs,apply=False)
-        ann.apply_grads()
+            ann.backward(observed,target,0,max_epochs,apply=True)
+            #ann.apply_grads()
 
     for example,target in examples:
          observed = ann.forward(example)

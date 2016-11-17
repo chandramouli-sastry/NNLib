@@ -2,17 +2,22 @@ from __future__ import division
 import math
 import numpy as np
 from activations import Sigmoid,Linear
-
+def fn(a,b):
+    return np.random.uniform(low=-0.1,high=0.1,size=(a,b))
+def xavier(a,b):
+    return real_randn(a,b)*2.0/(math.sqrt(a)+math.sqrt(b))
+real_randn = np.random.randn
+np.random.randn = fn
 class Layer:
     def __init__(self, layer_size, input_sizes, init_function = np.random.randn, activation=Sigmoid, alpha=0.01):
 
         self.alpha = alpha
         self.layer_size = layer_size
         self.input_sizes = input_sizes
-        self.weights = [np.random.uniform(low = -2, high=2,size =(layer_size, input_size))*0.01 \
+        self.weights = [np.random.randn(layer_size, input_size)#*2.0/(math.sqrt(input_size)+math.sqrt(layer_size)) \
                          for input_size in input_sizes]
         self.deltas = [np.zeros((layer_size,input_size)) for input_size in input_sizes]
-        self.bias =  np.random.uniform(low = -2, high=2,size =(layer_size, 1))*0.01
+        self.bias =  fn(layer_size, 1)
         self.del_bias = np.zeros((layer_size,1))
         self.input_stack = []
         self.activation_stack = []
@@ -41,7 +46,6 @@ class Layer:
     def backward(self, error_incoming, apply= True, alpha = 0.01):
         error_incoming = np.array(error_incoming).reshape((self.layer_size,1)) if type(error_incoming)==type([]) else error_incoming
         error_lower = error_incoming * self.activation.differentiate(self.activation_stack.pop())
-        #error_lower = error_lower.clip(-5,5)
         inputs = self.input_stack.pop()
         self.compute_gradients(error_lower, inputs)
         error_outgoing = [weight.T.dot(error_lower) for weight in self.weights]#weight: inp*layer_size layer_size*1
@@ -134,7 +138,7 @@ if __name__=="__main__":
             return inp
 
         def backward(self,observed, expected, epoch, max_epochs,apply=True):
-            if True or epoch%5==0:
+            if False and epoch%5==0:
                 self.alpha -= epoch/max_epochs
             expected = np.array(expected).reshape((len(expected),1))
             error = ( expected - observed )
@@ -156,14 +160,14 @@ if __name__=="__main__":
                 layer.print_w()
 
     _type = "Auto"
-    test(_type)
+    #test(_type)
     examples,ann = get_ann("Auto")
     max_epochs = 5000
     for epoch in range(max_epochs):
         for example,target in examples:
             observed = ann.forward(example,train=True)
-            ann.backward(observed,target,0,max_epochs,apply=True)
-            #ann.apply_grads()
+            ann.backward(observed,target,0,max_epochs,apply=False)
+            ann.apply_grads()
 
     for example,target in examples:
          observed = ann.forward(example)

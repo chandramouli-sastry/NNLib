@@ -10,12 +10,11 @@ from loss_functions import CrossEntropy,MeanSquared
 class ANN:
     def __init__(self,list_sizes,input_size, loss_fn=CrossEntropy):
         prev_size = input_size
-        self.alpha = 0.01
+        self.alpha = 0.1
         self.layers = []
         for Layer,i,act in list_sizes:
             self.layers.append(Layer(i,[prev_size],activation = act))
             prev_size = i
-        #self.layers.append(SoftmaxLayer(list_sizes[-1][1],[prev_size]))
         self.loss_fn = loss_fn
 
     def forward(self,input_,train= False):
@@ -25,17 +24,14 @@ class ANN:
         return inp
 
     def backward(self,observed, expected, epoch, max_epochs):
-        if epoch%5==0:
+        if False and epoch%5==0:
             self.alpha -= epoch/max_epochs
         expected = np.array(expected).reshape((len(expected),1))
         error = self.loss_fn.error(observed, expected)
-        #print observed,expected
         cost = self.loss_fn.compute(observed, expected)
-        #print cost
-        #raw_input()
-        #error = self.layers[-1].backward(error,np.argmax(expected))[0]
         for layer in reversed(self.layers):
             error = layer.backward(error, alpha = self.alpha,apply=True)[0]
+            assert len(layer.input_stack)==0 and len(layer.activation_stack)==0
         return cost
 def accuracy(samples,targets):
     count = 0
@@ -49,23 +45,26 @@ def accuracy(samples,targets):
     print count,len(samples)
 train, validate, test = pickle.load(open("./mnist.pkl","rb"))
 print len(train[0]),len(train[1])
-ann = ANN([(Layer,25,Sigmoid),(Layer,10,Linear)],784,loss_fn = MeanSquared)
-max_epochs = 1000
+ann = ANN([(Layer,25,Sigmoid),(SoftmaxLayer,10,Linear)],784,loss_fn = MeanSquared)
+max_epochs = 100
 accuracy(train[0],train[1])
 for epoch in range(max_epochs):
     cost = 0
-    for index in range(len(train)):
+    #costs = []
+    for index in range(len(train[0])):
         sample = train[0][index]
         target = train[1][index]
         expected = [0]*10
         expected[target] = 1
         observed = ann.forward(sample,train=True)
-        cost += ann.backward(observed,expected,0,max_epochs)
-    if epoch%5:
+        x = ann.backward(observed, expected, 0, max_epochs)
+        cost += x
+        #costs.append(x)
+    if epoch%1==0:
         print "Epoch: ",epoch, "Cost: ",cost
-
-accuracy(train[0],train[1])
-accuracy(test[0],test[1])
+    if epoch%1==0:
+        accuracy(train[0],train[1])
+        accuracy(test[0],test[1])
 '''examples = [[[0,1],[0,1]],[[1,0],[1,0]]]#,[[0,0],[1,0]],[[1,1],[1,0]]]
 ann = ANN([6,2],10)
 for epoch in range(100):

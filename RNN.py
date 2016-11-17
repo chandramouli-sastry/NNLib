@@ -1,13 +1,14 @@
 from __future__ import division
 import numpy as np
-from activations import Linear
+from activations import Linear, Sigmoid
 from layers.RNNLayer import RNNLayer
 from layers.Layer import Layer
-from loss_functions import MeanSquared
-np.random.seed(1)
+from layers.SoftmaxLayer import SoftmaxLayer
+from loss_functions import MeanSquared, CrossEntropy
+#np.random.seed(1)
 class RNN:
     def __init__(self,layers, input_size, cost_function):
-        self.alpha = 1.0
+        self.alpha = 0.1
         self.layers = []
         self.input_size = input_size
         prev = input_size
@@ -42,11 +43,16 @@ class RNN:
 
 
     def backward(self,observed, expected, epoch, max_epoch):
-        self.alpha = self.alpha - epoch/max_epoch
+        if False:
+            self.alpha = self.alpha - epoch/max_epoch
         errors = [0]*len(observed)
         outer_layer = self.layers[-1]
         cost = 0
         for ind in range(len(observed)-1,-1,-1):
+            if type(expected[ind])==type([]):
+                expected[ind]=np.array(expected[ind])
+            expected[ind] = expected[ind].reshape(observed[ind].shape)
+            #print expected[ind],observed[ind]
             err = self.cost_function.error(observed[ind],expected[ind])
             cost += self.cost_function.compute(observed[ind],expected[ind])
             errors[ind]=outer_layer.backward(err,apply=False)[0]
@@ -58,24 +64,26 @@ class RNN:
         return cost
 
 if __name__=="__main__":
-    length = 3
-    rnn = RNN(layers=[(RNNLayer,3,Linear),(Layer,1,Linear)],input_size=1,cost_function=MeanSquared)
+    length = 5
+    rnn = RNN(layers=[(RNNLayer,3,Sigmoid),(SoftmaxLayer,2,None)],input_size=1,cost_function=CrossEntropy)
     samples = [(map(lambda x:[int(x)],'0'*(length-len(bin(i))+2)+bin(i)[2:])) for i in range(0,2**length)]
-    for ind,l in enumerate(samples):
-        s = l[0]
-        l1=[s[0]]
-        for t in l:
-            l1.append(2*l1[-1]+t[0])
-        samples[ind]=l,map(lambda x:[x],l1[1:])
-    samples=[samples[2]]
-    print samples
-    max_epoch = 1000
+    for ind,sample in enumerate(samples):
+        op = [sample[0]]
+        for i in sample[1:]:
+            op.append([op[-1][0]^i[0]])
+        for ind1,i in enumerate(op):
+            op[ind1]=[0,1] if i[0]==1 else [1,0]
+        samples[ind]=(sample,op)
+    max_epoch = 10
     for epoch in range(max_epoch):
         cost = 0
+        costs = []
         for observation,target in samples:
             x = rnn.forward(observation,train=True)
-            cost += rnn.backward(x,target,epoch,max_epoch)
-        if epoch%10==0:
+            backward = rnn.backward(x, target, epoch, max_epoch)
+            cost += backward
+            costs.append(backward)
+        if epoch%1==0:
             print "Epoch : ",epoch,"Cost: ",cost
     while True:
         x = raw_input("Enter sequence")

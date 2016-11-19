@@ -12,9 +12,10 @@ class SoftmaxLayer(Layer):
     def backward(self, error_incoming, apply= True, alpha = 0.01):
         error_incoming = np.array(error_incoming).reshape((self.layer_size,1)) if type(error_incoming)==type([]) else error_incoming
         act = self.activation_stack.pop()
-        error_lower = np.array([(error_incoming * self.activation.differentiate(act,i)).sum() for i in xrange(self.layer_size)]).reshape((self.layer_size,1))
+        #error_lower = np.array([(error_incoming * self.activation.differentiate(act,i)).sum() for i in xrange(self.layer_size)]).reshape((self.layer_size,1))
         #print error_lower
         #raw_input()
+        error_lower = error_incoming
         inputs = self.input_stack.pop()
         self.compute_gradients(error_lower, inputs)
         error_outgoing = [weight.T.dot(error_lower) for weight in self.weights]

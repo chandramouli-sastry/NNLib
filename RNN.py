@@ -48,21 +48,33 @@ class RNN:
         errors = [0]*len(observed)
         outer_layer = self.layers[-1]
         cost = 0
-        for ind in range(len(observed)-1,-1,-1):
+        """for ind in range(len(observed)-1,-1,-1):
             if type(expected[ind])==type([]):
                 expected[ind]=np.array(expected[ind])
             expected[ind] = expected[ind].reshape(observed[ind].shape)
             #print expected[ind],observed[ind]
             err = self.cost_function.error(observed[ind],expected[ind])
             cost += self.cost_function.compute(observed[ind],expected[ind])
+            errors[ind]=outer_layer.backward(err,apply=False)[0]"""
+        flag = True
+        for ind in range(len(observed)-1,-1,-1):
+            if type(expected[ind])==type([]):
+                expected[ind]=np.array(expected[ind])
+            expected[ind] = expected[ind].reshape(observed[ind].shape)
+            #if(not flag):
+                #expected[ind] = observed[ind]
+            cost+=self.cost_function.compute(observed[ind],expected[ind])
+            err = -( observed[ind] - expected[ind] )
             errors[ind]=outer_layer.backward(err,apply=False)[0]
+            flag =False
+
         for layer in self.layers[:-1][::-1]:
             errors = layer.backward(errors)
         for layer in self.layers:
             layer.apply_gradients(self.alpha)
      #   print "1"
         return cost
-
+    #Let me disconnect and reconnect
 if __name__=="__main__":
     length = 5
     rnn = RNN(layers=[(RNNLayer,3,Sigmoid),(SoftmaxLayer,2,None)],input_size=1,cost_function=CrossEntropy)
@@ -74,7 +86,7 @@ if __name__=="__main__":
         for ind1,i in enumerate(op):
             op[ind1]=[0,1] if i[0]==1 else [1,0]
         samples[ind]=(sample,op)
-    max_epoch = 10
+    max_epoch = 1000
     for epoch in range(max_epoch):
         cost = 0
         costs = []
@@ -88,5 +100,8 @@ if __name__=="__main__":
     while True:
         x = raw_input("Enter sequence")
         x = map(lambda x:[int(x)],x)
-        print rnn.forward(x,train=False)
+        v = rnn.forward(x,train=False)
+        for ind in range(len(v)):
+            v[ind] = np.argmax(v[ind])
+        print(v)
 

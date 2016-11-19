@@ -1,0 +1,16 @@
+activations/Linear.py
+activations/Sigmoid.py
+activations/Softmax.py
+activations/__init__.py
+layers/Layer.py
+layers/RNNLayer.py
+layers/SoftmaxLayer.py
+layers/__init__.py
+loss_functions/CrossEntropy.py
+loss_functions/MeanSquared.py
+loss_functions/__init__.py
+nnlib.egg-info/PKG-INFO
+nnlib.egg-info/SOURCES.txt
+nnlib.egg-info/dependency_links.txt
+nnlib.egg-info/not-zip-safe
+nnlib.egg-info/top_level.txt

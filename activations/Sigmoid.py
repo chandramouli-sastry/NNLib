@@ -5,3 +5,4 @@ def apply(input_):
 
 def differentiate(activation):
     return activation * (1 - activation)
+

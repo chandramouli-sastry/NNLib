@@ -3,7 +3,7 @@ import math
 import numpy as np
 from activations import Sigmoid,Linear
 def fn(a,b):
-    return np.random.uniform(low=-0.1,high=0.1,size=(a,b))
+    return np.random.uniform(low=-0.01,high=0.01,size=(a,b))
 def xavier(a,b):
     return real_randn(a,b)*2.0/(math.sqrt(a)+math.sqrt(b))
 real_randn = np.random.randn
@@ -17,7 +17,10 @@ class Layer:
         self.weights = [np.random.randn(layer_size, input_size)#*2.0/(math.sqrt(input_size)+math.sqrt(layer_size)) \
                          for input_size in input_sizes]
         self.deltas = [np.zeros((layer_size,input_size)) for input_size in input_sizes]
-        self.bias =  fn(layer_size, 1)
+        if activation==Linear:
+            self.bias =  np.ones((layer_size,1))
+        else:
+            self.bias = fn(layer_size, 1)
         self.del_bias = np.zeros((layer_size,1))
         self.input_stack = []
         self.activation_stack = []
@@ -60,7 +63,7 @@ class Layer:
 
     def apply_gradients(self, alpha = 0.01):
         for index,delta in enumerate(self.deltas):
-            self.weights[index] += alpha * delta#.clip(-5,5)
+            self.weights[index] += alpha * delta.clip(-5,5)
         self.bias += alpha * self.del_bias
         self.deltas = [np.zeros((self.layer_size,input_size)) for input_size in self.input_sizes]
         self.del_bias = np.zeros((self.layer_size,1))

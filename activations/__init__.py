@@ -1,4 +1,4 @@
-import Sigmoid,Linear,Softmax
+import Sigmoid,Linear,Softmax,Tanh
 
 class Act:
 
@@ -9,3 +9,4 @@ class Act:
 Sigmoid = Act(Sigmoid)
 Linear = Act(Linear)
 Softmax = Act(Softmax)
+Tanh = Act(Tanh)

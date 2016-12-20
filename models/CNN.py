@@ -9,7 +9,7 @@ import numpy as np
 from loss_functions import CrossEntropy,MeanSquared
 
 class CNN:
-    def __init__(self,layers,input_size,cost_fn=CrossEntropy):
+    def __init__(self,layers,input_size,cost_function=CrossEntropy):
         prev= input_size
         self.layers = []
         for layer,attrs in layers:

@@ -10,7 +10,6 @@ real_randn = np.random.randn
 np.random.randn = fn
 class Layer:
     def __init__(self, layer_size, input_sizes, init_function = np.random.randn, activation=Sigmoid, alpha=0.01):
-        self.reg_lambda = 0.01
         self.alpha = alpha
         self.layer_size = layer_size
         self.input_sizes = input_sizes
@@ -65,7 +64,6 @@ class Layer:
 
     def apply_gradients(self, alpha = 0.01):
         for index,delta in enumerate(self.deltas):
-            delta += self.reg_lambda*self.weights[index]
             self.mems[index] += delta*delta
             self.weights[index] += alpha * delta.clip(-5,5)/np.sqrt(self.mems[index]+1e-8)
         self.mem_bias += self.del_bias*self.del_bias

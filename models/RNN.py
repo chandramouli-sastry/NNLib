@@ -82,7 +82,7 @@ class RNN:
 
 
 if __name__=="__main__":
-    __test__= "XOR"
+    __test__= "BIN"
     if __test__=="XOR":
         length = 5
         rnn = RNN(layers=[(GRULayer,3,Sigmoid),(SoftmaxLayer,2,None)],input_size=1,cost_function=CrossEntropy)
@@ -126,7 +126,7 @@ if __name__=="__main__":
             samples[ind]=(sample,op)
             #print samples[ind]
             #input()
-        max_epoch = 100
+        max_epoch = 1000
         for epoch in range(max_epoch):
             cost = 0
             costs = []

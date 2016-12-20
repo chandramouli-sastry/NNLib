@@ -16,12 +16,14 @@ class Layer:
         self.input_sizes = input_sizes
         self.weights = [np.random.randn(layer_size, input_size)#*2.0/(math.sqrt(input_size)+math.sqrt(layer_size)) \
                          for input_size in input_sizes]
+        self.mems = [np.zeros_like(weight) for weight in self.weights]
         self.deltas = [np.zeros((layer_size,input_size)) for input_size in input_sizes]
         if activation==Linear:
             self.bias =  np.ones((layer_size,1))
         else:
             self.bias = fn(layer_size, 1)
         self.del_bias = np.zeros((layer_size,1))
+        self.mem_bias = np.zeros_like(self.del_bias)
         self.input_stack = []
         self.activation_stack = []
         self.activation = activation
@@ -63,8 +65,10 @@ class Layer:
 
     def apply_gradients(self, alpha = 0.01):
         for index,delta in enumerate(self.deltas):
-            self.weights[index] += alpha * delta.clip(-5,5)
-        self.bias += alpha * self.del_bias
+            self.mems[index] += delta*delta
+            self.weights[index] += alpha * delta.clip(-5,5)/np.sqrt(self.mems[index]+1e-8)
+        self.mem_bias += self.del_bias*self.del_bias
+        self.bias += alpha * self.del_bias/np.sqrt(self.mem_bias+1e-8)
         self.deltas = [np.zeros((self.layer_size,input_size)) for input_size in self.input_sizes]
         self.del_bias = np.zeros((self.layer_size,1))
 
